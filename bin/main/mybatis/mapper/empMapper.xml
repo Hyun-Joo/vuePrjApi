@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?> 
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.toy.prj.mapper.EmpMapper">
+	<select id="empList" resultType="com.toy.prj.model.EmpDTO" >
+		select empno
+		      ,nm
+		      ,rtrim(ta.pos,' ') as pos
+		      ,rtrim(area_nm,' ') as area_nm
+		      ,rtrim(ta.area_cd,' ') as area_cd
+		      ,rtrim(to_char(to_date(st_dt),'yyyy/mm/dd'),' ') as st_dt
+		      ,rtrim(to_char(to_date(et_dt),'yyyy/mm/dd'),' ') as et_dt
+		      ,length(translate(rpad(substr('1234567',to_char(to_date(st_dt),'d'))
+		           ,to_date(et_dt)-to_date(st_dt)+1
+		           ,'1234567'),' 17',' ')) as ef_d_cnt
+		      ,length(translate(rpad(substr('1234567',to_char(to_date(st_dt),'d'))
+		           ,to_date(et_dt)-to_date(st_dt)+1
+		           ,'1234567'),' 17',' '))*pay_amt*rat as pay_amt
+		from (
+		        select a.empno
+		              ,a.nm
+		              ,b.pos
+		              ,c.area_cd
+		              ,greatest(b.st_dt,c.st_dt) st_dt
+		              ,least(b.et_dt,c.et_dt) et_dt
+		        from wise_emp a
+		            ,pos_hist b
+		            ,area_hist c
+		        where a.empno=b.empno
+		            and a.empno=c.empno
+		            <![CDATA[and b.st_dt <= c.et_dt
+		            and b.et_dt >= c.st_dt]]>) ta
+		   ,tra_area_cd tb
+		   ,tra_amt_rat tc
+		where ta.area_cd=tb.area_cd
+		    and ta.pos=tc.pos
+		order by empno,st_dt
+	</select>
+</mapper>
